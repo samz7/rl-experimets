@@ -22,14 +22,18 @@ class PolicyNet(nn.Module):
                            ])
         
         self.arch = OrderedDict([
-                    ('fc1', nn.Linear(139200, 250)),
+                    ('fc1', nn.Linear(155520, 650)),
                     ('relu1', nn.ReLU()),
 
-                    ('fc2', nn.Linear(250, 150)),
+                    ('fc2', nn.Linear(650, 450)),
                     ('relu2', nn.ReLU()),
-                    ('fc3', nn.Linear(150, 50)),
+                    ('fc3', nn.Linear(450, 250)),
                     ('relu3', nn.ReLU()),
-                    ('fc4', nn.Linear(50, self.action_space))
+                    ('fc4', nn.Linear(250, 120)),
+                    ('relu4', nn.ReLU()),
+                    ('fc5', nn.Linear(120, 50)),
+                    ('relu5', nn.ReLU()),
+                    ('fc6', nn.Linear(50, self.action_space))
                     ])
 
         self.model = nn.Sequential(self.arch)

@@ -1,0 +1,8 @@
+__pycache__
+
+# Checkpoints
+**.pth
+
+# Swap files in vim
+**.swp
+**.swo
