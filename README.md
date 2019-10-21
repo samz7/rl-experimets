@@ -7,7 +7,8 @@ Hopefully this repo will help people who quickly want to get in the beautiful wo
 
 These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. 
 
-###TODOS
+### TODOS
+
 * [main.py]Change the per time step policy update to episodic policy update.
 * [utils.py]Comment the util functions.
 
