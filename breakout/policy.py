@@ -12,7 +12,7 @@ class PolicyNet(nn.Module):
         self.state_shape = feature_shape
 
         self.conv_layer = OrderedDict([
-                            ('conv1', nn.Conv2d(3, 8, kernel_size=5)),
+                            ('conv1', nn.Conv2d(1, 8, kernel_size=5)),
                             ('relu1', nn.ReLU()),
                             ('conv2', nn.Conv2d(8, 20, kernel_size=5)),
                             ('relu2', nn.ReLU()),
@@ -22,16 +22,16 @@ class PolicyNet(nn.Module):
                            ])
         
         self.arch = OrderedDict([
-                    ('fc1', nn.Linear(155520, 650)),
+                    ('fc1', nn.Linear(155520, 350)),
                     ('relu1', nn.ReLU()),
 
-                    ('fc2', nn.Linear(650, 450)),
+                    ('fc2', nn.Linear(350, 250)),
                     ('relu2', nn.ReLU()),
-                    ('fc3', nn.Linear(450, 250)),
+                    ('fc3', nn.Linear(250, 150)),
                     ('relu3', nn.ReLU()),
-                    ('fc4', nn.Linear(250, 120)),
+                    ('fc4', nn.Linear(150, 100)),
                     ('relu4', nn.ReLU()),
-                    ('fc5', nn.Linear(120, 50)),
+                    ('fc5', nn.Linear(100, 50)),
                     ('relu5', nn.ReLU()),
                     ('fc6', nn.Linear(50, self.action_space))
                     ])

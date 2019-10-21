@@ -27,8 +27,9 @@ def preprocess(img):
         cutting of the points bar on the top
         and the side gray bars"""
     img = downsample(img[26:, 10:-10, :])
+    img = to_grayscale(img)
     img = cv2.resize(img, (84, 84))
-    img = torch.FloatTensor(img.reshape(1,3,84,84)).cuda()
+    img = torch.FloatTensor(img.reshape(1,1,84,84)).cuda()
     return img
 
 def policy_update(optimizer, log_prob, reward):

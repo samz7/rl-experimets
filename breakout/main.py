@@ -23,10 +23,10 @@ observation = env.reset()
 running_reward = 0
 episode = 1
 
-for _ in range(200000):
+while True:
+
     try:
         observation = preprocess(observation) # State image size 
-        print(observation.shape)
 
         output = policy(observation) # your agent here (this takes random actions)
         prob_dis = torch.distributions.Categorical(output)
@@ -34,13 +34,15 @@ for _ in range(200000):
         #prob, action = torch.max(output, 1)
         action_signal = action + signal(action)*1
         env.step(1)
+        env.render()
         
         observation, reward, done, info = env.step(action_signal)
+        running_reward += reward
         policy_update(optimizer, output[0, action], reward)
 
-        env.render()
         if done:
-            print('episode----'+str(episode)+'******')
+            print('episode----'+str(episode))
+            print("rewards----"+str(running_reward))
             episode +=1
             
             running_reward = 0
