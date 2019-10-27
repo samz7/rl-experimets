@@ -18,15 +18,17 @@ print('env-made')
 policy = PolicyNet(3,3).cuda() 
 print('policy-ready')
 
-optimizer = torch.optim.Adam(policy.parameters(), lr=0.003)
+#optimizer = torch.optim.Adam(policy.parameters(), lr=0.003)
+p_optimizer = PolicyOptimizer(policy) 
 observation = env.reset()
 running_reward = 0
-episode = 1
+time_steps = 0
 
 while True:
 
     try:
-        observation = preprocess(observation) # State image size 
+        observation = preprocess(observation) # State image size -> 84 X 84 
+        lives = env.ale.lives()
 
         output = policy(observation) # your agent here (this takes random actions)
         prob_dis = torch.distributions.Categorical(output)
@@ -37,16 +39,19 @@ while True:
         env.render()
         
         observation, reward, done, info = env.step(action_signal)
+        time_steps += 1
         running_reward += reward
-        policy_update(optimizer, output[0, action], reward)
+        #policy_update(optimizer, output[0, action], reward)
+        p_optimizer.cache_step(output[0, action], reward)
 
-        if done:
-            print('episode----'+str(episode))
-            print("rewards----"+str(running_reward))
-            episode +=1
+        if done: 
+
+            print("average_rewards----"+str(running_reward/time_steps))
             
             running_reward = 0
+            p_optimizer.reinforce()
             observation = env.reset()
+
     except KeyboardInterrupt:
         path_name = input("enter checkpoint name: ")
         if path_name == "":

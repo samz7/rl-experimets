@@ -44,7 +44,15 @@ class PolicyNet(nn.Module):
         x = x.view(x.shape[0], -1)
         
         x = self.model(x)
-        return torch.log_softmax(x, dim=1)
+        return torch.softmax(x, dim=1)
+
+
+if __name__ == '__main__':
+
+    p = PolicyNet(3,3)
+    print(len(list(p.parameters())))
+
+
 
 
 
