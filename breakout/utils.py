@@ -12,36 +12,74 @@ class PolicyOptimizer():
         self.policy_net = policy_net
         self.probs = []
         self.rewards = []
-        self.optimizer = optim.Adam(self.policy_net.parameters(), lr=0.001)
+        self.reward_index = []
+        self.prob_tensor = torch.tensor([])
+        self.scores = []
+        self.optimizer = optim.Adam(self.policy_net.parameters(), lr=0.0001)
         self.gamma = 0.99
     
     def cache_step(self, prob, reward):
         """Called at each time step to save the reward and the probability of the action taken"""
-
         self.rewards.append(reward)
         self.probs.append(prob)
 
 
-    def discounted_reward(self, reward_list):
-        """Discounts all the rewards of a trajectory into one discounted reward"""
+
+    def mul_rewards(self):
+        print(self.probs[0][0].requires_grad)
+        for idx in self.reward_index:
+            t = self.prob_tensor[:idx]
+            self.prob_tensor[:idx] *= self.disc_reward_generator(len(t))
+
+
+
+    def disc_reward_generator(self, n):
         pw = 1
-        discounted_reward = 0
-        for r in reversed(reward_list):
-            discounted_reward += r*(self.gamma**pw)
+        discounted_reward = []
+        for i in range(n):
+            discounted_reward.append(1*(self.gamma**pw))
             pw += 1
-        return discounted_reward
+        return torch.tensor(list(discounted_reward))
+
+
+
+    def discounted_reward(self, rewards):
+
+        """Discounts all the rewards of a trajectory"""
+        discounted_rewards = []
+
+        for t in range(len(rewards)):
+            Gt = 0
+            pw = 0
+            for r in rewards[t:]:
+                Gt = Gt + self.gamma**pw * r
+                pw = pw + 1
+            discounted_rewards.append(Gt)
+        discounted_rewards = torch.tensor(discounted_rewards)
+
+        return discounted_rewards
+
+                                        
 
         
     def reinforce(self):
-        gt = self.discounted_reward(self.rewards)
-        for prob in self.probs:
-            score = (-torch.log(prob)*gt)
-            score.backward()
+        rewards = self.discounted_reward(self.rewards)
+        scores = []
 
-            self.optimizer.step()
-            self.optimizer.zero_grad()
+        for log_prob, r in zip(self.probs, rewards):
+            scores.append(-log_prob*r)
+
+        expectation = torch.stack(scores).mean()
+        
+
+        self.optimizer.zero_grad()
+        expectation.backward()
+        self.optimizer.step()
+        
+
         self.probs = []
         self.rewards = []
+        
 
 
         

@@ -15,49 +15,49 @@ from utils import *
 env = gym.make("Breakout-v0")
 
 print('env-made')
-policy = PolicyNet(3,3).cuda() 
+policy = PolicyNet(3,4).cuda() 
 print('policy-ready')
 
 #optimizer = torch.optim.Adam(policy.parameters(), lr=0.003)
 p_optimizer = PolicyOptimizer(policy) 
 observation = env.reset()
-running_reward = 0
-time_steps = 0
+ep_rewards = []
+num_episodes = 50000
+running_rewards = 0
 
-while True:
+for ep in range(1, num_episodes+1):
 
-    try:
-        observation = preprocess(observation) # State image size -> 84 X 84 
-        lives = env.ale.lives()
+    while True:
 
-        output = policy(observation) # your agent here (this takes random actions)
-        prob_dis = torch.distributions.Categorical(output)
-        action = prob_dis.sample().item()
-        #prob, action = torch.max(output, 1)
-        action_signal = action + signal(action)*1
-        env.step(1)
-        env.render()
-        
-        observation, reward, done, info = env.step(action_signal)
-        time_steps += 1
-        running_reward += reward
-        #policy_update(optimizer, output[0, action], reward)
-        p_optimizer.cache_step(output[0, action], reward)
 
-        if done: 
+        try:
+            observation = preprocess(observation) # State image size -> 84 X 84 
 
-            print("average_rewards----"+str(running_reward/time_steps))
+            action, prob = policy(observation) # your agent here (output: [action, probability of action])
+            env.render()
             
-            running_reward = 0
-            p_optimizer.reinforce()
-            observation = env.reset()
+            observation, reward, done, info = env.step(action)
+            running_rewards += reward
+            p_optimizer.cache_step(prob, reward)
 
-    except KeyboardInterrupt:
-        path_name = input("enter checkpoint name: ")
-        if path_name == "":
-            torch.save(policy.state_dict(), 'checkpoint1.pth')
-        torch.save(policy.state_dict(), path_name)
-        exit()
+            if done:
+                ep_rewards.append(running_rewards)
+
+                print('EP '+str(ep))
+                print('ep-reward-------'+str(running_rewards))
+                print("avg-ep-reward----"+str(sum(ep_rewards)/len(ep_rewards)))
+                print('\n')
+                running_rewards = 0 
+                p_optimizer.reinforce()
+                observation = env.reset()
+                break
+
+        except KeyboardInterrupt:
+            path_name = input("enter checkpoint name: ")
+            if path_name == "":
+                torch.save(policy.state_dict(), 'checkpoint1.pth')
+            torch.save(policy.state_dict(), path_name)
+            exit()
 env.close()
 
 

@@ -6,7 +6,7 @@ import torch
 
 
 class PolicyNet(nn.Module):
-    def __init__(self, action_space, feature_shape):
+    def __init__(self, feature_shape, action_space):
         super().__init__()
         self.action_space = action_space
         self.state_shape = feature_shape
@@ -45,6 +45,14 @@ class PolicyNet(nn.Module):
         
         x = self.model(x)
         return torch.softmax(x, dim=1)
+
+    def __call__(self, x):
+        probs = self.forward(x)
+        distribution = torch.distributions.Categorical(probs)
+        action = distribution.sample().item()
+        prob = probs[0, action]
+
+        return (action, prob)
 
 
 if __name__ == '__main__':
