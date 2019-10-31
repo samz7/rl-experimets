@@ -9,8 +9,7 @@ These instructions will get you a copy of the project up and running on your loc
 
 ### TODOS
 
-* [main.py]Change the per time step policy update to episodic policy update.
-* [utils.py]Comment the util functions.
+* [utils.py] figure out why the policy is getting stuck in one aciton 
 
 
 ### Prerequisites
