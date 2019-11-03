@@ -12,28 +12,22 @@ class PolicyNet(nn.Module):
         self.state_shape = feature_shape
 
         self.conv_layer = OrderedDict([
-                            ('conv1', nn.Conv2d(1, 8, kernel_size=5)),
-                            ('relu1', nn.ReLU()),
-                            ('conv2', nn.Conv2d(8, 20, kernel_size=5)),
-                            ('relu2', nn.ReLU()),
-                            ('conv3', nn.Conv2d(20, 30, kernel_size=5)),
-                            ('relu3', nn.ReLU()),
+                            ('conv1', nn.Conv2d(1, 4, kernel_size=5)),
+                            ('relu1', nn.Tanh()),
+                            ('conv2', nn.Conv2d(4, 8, kernel_size=5)),
+                            ('relu2', nn.Tanh()),
                            
                            ])
         
         self.arch = OrderedDict([
-                    ('fc1', nn.Linear(155520, 350)),
-                    ('relu1', nn.ReLU()),
+                    ('fc1', nn.Linear(46208, 250)),
+                    ('relu1', nn.Tanh()),
 
-                    ('fc2', nn.Linear(350, 250)),
-                    ('relu2', nn.ReLU()),
-                    ('fc3', nn.Linear(250, 150)),
-                    ('relu3', nn.ReLU()),
-                    ('fc4', nn.Linear(150, 100)),
-                    ('relu4', nn.ReLU()),
-                    ('fc5', nn.Linear(100, 50)),
-                    ('relu5', nn.ReLU()),
-                    ('fc6', nn.Linear(50, self.action_space))
+                    ('fc2', nn.Linear(250, 100)),
+                    ('relu3', nn.Tanh()),
+                    ('fc3', nn.Linear(100, 50)),
+                    ('relu5', nn.Tanh()),
+                    ('fc4', nn.Linear(50, self.action_space))
                     ])
 
         self.model = nn.Sequential(self.arch)
@@ -50,7 +44,7 @@ class PolicyNet(nn.Module):
         probs = self.forward(x)
         distribution = torch.distributions.Categorical(probs)
         action = distribution.sample().item()
-        prob = probs[0, action]
+        prob = torch.log(probs[0, action])
 
         return (action, prob)
 
@@ -58,7 +52,7 @@ class PolicyNet(nn.Module):
 if __name__ == '__main__':
 
     p = PolicyNet(3,3)
-    print(len(list(p.parameters())))
+    print(p)
 
 
 

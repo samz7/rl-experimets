@@ -12,10 +12,7 @@ class PolicyOptimizer():
         self.policy_net = policy_net
         self.probs = []
         self.rewards = []
-        self.reward_index = []
-        self.prob_tensor = torch.tensor([])
-        self.scores = []
-        self.optimizer = optim.Adam(self.policy_net.parameters(), lr=0.0001)
+        self.optimizer = optim.Adam(self.policy_net.parameters(), lr=0.001)
         self.gamma = 0.99
     
     def cache_step(self, prob, reward):
@@ -26,20 +23,22 @@ class PolicyOptimizer():
 
 
     def mul_rewards(self):
-        print(self.probs[0][0].requires_grad)
         for idx in self.reward_index:
-            t = self.prob_tensor[:idx]
-            self.prob_tensor[:idx] *= self.disc_reward_generator(len(t))
+            t = [] 
+            for p, r in zip(self.probs[:idx], self.r_gen(len(self.probs[:idx]))):
+                t.append(-p*r)
+            self.probs[:idx] = t
+        
 
 
 
-    def disc_reward_generator(self, n):
+    def r_gen(self, n):
         pw = 1
         discounted_reward = []
         for i in range(n):
-            discounted_reward.append(1*(self.gamma**pw))
+            discounted_reward.append(1+(self.gamma**pw))
             pw += 1
-        return torch.tensor(list(discounted_reward))
+        return torch.tensor(list(reversed(discounted_reward)))
 
 
 
@@ -63,16 +62,18 @@ class PolicyOptimizer():
 
         
     def reinforce(self):
+        self.optimizer.zero_grad()
         rewards = self.discounted_reward(self.rewards)
+        #self.mul_rewards()
         scores = []
 
         for log_prob, r in zip(self.probs, rewards):
-            scores.append(-log_prob*r)
+            scores.append(-(log_prob*r))
 
-        expectation = torch.stack(scores).mean()
+        expectation = torch.stack(scores).sum()
+        print(expectation)
         
 
-        self.optimizer.zero_grad()
         expectation.backward()
         self.optimizer.step()
         
@@ -87,17 +88,11 @@ class PolicyOptimizer():
         
 
 
-def signal(n):
-    """To only output the actions in [0, 2, 3"""
-    if n == 0:
-        return 0
-    return 1
-
 def process(ob):
     #ob = Image.fromarray(ob.astype('uint8'), 'RGB')
     #resize = transforms.Resize(64, 64)
     #ob = resize(ob)
-    ob = torch.FloatTensor(ob.reshape(1, 3, 210, 160)).cuda()
+    ob = torch.FloatTensor(ob.reshape(1, 3, 210, 160))
     return ob
 
 
@@ -117,13 +112,6 @@ def preprocess(img):
     img = torch.FloatTensor(img.reshape(1,1,84,84)).cuda()
     return img
 
-def policy_update(optimizer, log_prob, reward):
-    """ At each step multiplying the reward and the log prob of the action taken
-        in that state and calling backwards on that"""
-    score = reward*log_prob
-    (score).backward()
-    optimizer.zero_grad()
-    optimizer.step()
  
 
 
